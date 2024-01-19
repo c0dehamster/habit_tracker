@@ -37,13 +37,102 @@ class HabitDatabase extends ChangeNotifier {
 
   /* CRUD OPERATIONS */
 
+  // List of habits
+  final List<Habit> currentHabits = [];
+
   // CREATE - add a new habit
+  Future<void> addHabit(String habitName) async {
+    // Create a new habit
+    final newHabit = Habit()..name = habitName;
+
+    // Save to the database
+    await isar.writeTxn(() => isar.habits.put(newHabit));
+
+    // Re-read from the database
+    readHabits();
+  }
 
   // READ saved habits from a database
+  Future<void> readHabits() async {
+    // Fetch all habits from the database
+    List<Habit> fetchedHabits = await isar.habits.where().findAll();
+
+    // Give to current habits
+    currentHabits.clear();
+    currentHabits.addAll(fetchedHabits);
+
+    // Update UI
+    notifyListeners();
+  }
 
   // UPDATE - check habit on and off
+  Future<void> updateHabitCompletion(int id, bool isCompleted) async {
+    // Find the specific habit
+    final habit = await isar.habits.get(id);
+
+    // Update coompletion status
+    if (habit != null) {
+      await isar.writeTxn(() async {
+        // If the habit is completed, add the current date to the completedDays list
+        if (!isCompleted && !habit.completedDays.contains(DateTime.now())) {
+          // Today
+          final today = DateTime.now();
+
+          // Add the current date if it is not already in the list
+          habit.completedDays.add(
+            DateTime(
+              today.year,
+              today.month,
+              today.day,
+            ),
+          );
+        }
+
+        // If the habit is not complete, remove the habit from the list
+        else {
+          // Remove the current habit if the habit is marked as not completed
+          habit.completedDays.removeWhere(
+            (date) =>
+                date.year == DateTime.now().year &&
+                date.month == DateTime.now().month &&
+                date.day == DateTime.now().day,
+          );
+        }
+        // Save the updated habits to the database
+        await isar.habits.put(habit);
+      });
+    }
+
+    // Re-read from the database
+    readHabits();
+  }
 
   // UPDATE - edit habit name
+  Future<void> updateHabitName(int id, String newName) async {
+    // Find the required habit
+    final habit = await isar.habits.get(id);
+
+    // Update the habit name
+    if (habit != null) {
+      // Update the name
+      habit.name = newName;
+
+      // Save the updated habit back to the database
+      await isar.habits.put(habit);
+    }
+
+    // Re-read from the database
+    readHabits();
+  }
 
   // DELETE habit
+  Future<void> deleteHabit(int id) async {
+    // Delete
+    await isar.writeTxn(() async {
+      await isar.habits.delete(id);
+    });
+
+    // Re-read from the database
+    readHabits();
+  }
 }
