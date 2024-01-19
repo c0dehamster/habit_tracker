@@ -98,8 +98,88 @@ class _HomePageState extends State<HomePage> {
       // Update the habit completion status
       if (value != null) {
         context.read<HabitDatabase>().updateHabitCompletion(habit.id, value);
-        print("Check registered");
       }
+    }
+
+    // Edit habit box
+    void editHabitBox(Habit habit) {
+      // Set the controller's name to be the habit's current name
+      textController.text = habit.name;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: TextField(
+            controller: textController,
+          ),
+          actions: [
+            // Save button
+            TextButton(
+              onPressed: () {
+                // Get the new habit name
+                String newHabitName = textController.text;
+
+                // Save to the database
+                context.read<HabitDatabase>().updateHabitName(habit.id, newHabitName);
+
+                // Pop the dialog box
+                Navigator.pop(context);
+
+                // Clear the controller
+                textController.clear();
+              },
+              child: const Text("Save"),
+            ),
+
+            // Cancel button
+            TextButton(
+              onPressed: () {
+                // Pop the dialog box
+                Navigator.pop(context);
+
+                // Clear the controller
+                textController.clear();
+              },
+              child: const Text("Cancel"),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Delete habit box
+    void deleteHabitBox(Habit habit) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Are you sure you want to delete?"),
+          actions: [
+            // Delete button
+            TextButton(
+              onPressed: () {
+                // Save to the database
+                context.read<HabitDatabase>().deleteHabit(habit.id);
+
+                // Pop the dialog box
+                Navigator.pop(context);
+              },
+              child: const Text("Delete"),
+            ),
+
+            // Cancel button
+            TextButton(
+              onPressed: () {
+                // Pop the dialog box
+                Navigator.pop(context);
+
+                // Clear the controller
+                textController.clear();
+              },
+              child: const Text("Cancel"),
+            ),
+          ],
+        ),
+      );
     }
 
     // Current habits
@@ -120,6 +200,8 @@ class _HomePageState extends State<HomePage> {
           text: habit.name,
           isCompleted: isCompletedToday,
           onChanged: (value) => toggleCompleted(value, habit),
+          editHabit: (context) => editHabitBox(habit),
+          deleteHabit: (context) => deleteHabitBox(habit),
         );
       },
     );
