@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/components/habit_tile.dart';
 import 'package:habit_tracker/components/main_drawer.dart';
 import 'package:habit_tracker/models/database/habit_database.dart';
 import 'package:provider/provider.dart';
@@ -92,6 +93,15 @@ class _HomePageState extends State<HomePage> {
     // Hadit database
     final habitDatabase = context.watch<HabitDatabase>();
 
+    // Check the habit on and off
+    void toggleCompleted(bool? value, Habit habit) {
+      // Update the habit completion status
+      if (value != null) {
+        context.read<HabitDatabase>().updateHabitCompletion(habit.id, value);
+        print("Check registered");
+      }
+    }
+
     // Current habits
     List<Habit> currentHabits = habitDatabase.currentHabits;
 
@@ -106,8 +116,10 @@ class _HomePageState extends State<HomePage> {
         bool isCompletedToday = isHabitCompletedToday(habit.completedDays);
 
         // Return habit tile UI
-        return ListTile(
-          title: Text(habit.name),
+        return HabitTile(
+          text: habit.name,
+          isCompleted: isCompletedToday,
+          onChanged: (value) => toggleCompleted(value, habit),
         );
       },
     );
