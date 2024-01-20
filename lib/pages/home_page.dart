@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/components/habit_tile.dart';
 import 'package:habit_tracker/components/main_drawer.dart';
+import 'package:habit_tracker/components/main_heat_map.dart';
 import 'package:habit_tracker/models/database/habit_database.dart';
 import 'package:provider/provider.dart';
 
@@ -85,9 +86,42 @@ class _HomePageState extends State<HomePage> {
           Icons.edit,
         ),
       ),
-      body: _buildHabitList(),
+      body: ListView(
+        children: [
+          _buildHabitList(),
+        ],
+      ),
     );
   }
+
+  // Build heatmap
+
+  Widget _buildHeatMap() {
+    // Habit database
+    final habitDatabase = context.watch<HabitDatabase>();
+
+    // Current habits
+    List<Habit> currentHabits = habitDatabase.currentHabits;
+
+    // Return heat map UI
+    return FutureBuilder(
+      future: habitDatabase.getFirstLaunchDate(),
+      builder: (context, snapshot) {
+        // Once the data is available, build the heatmap
+        if (snapshot.hasData) {
+          return MainHeatMap(
+            startDate: snapshot.data!,
+            datasets: prepHeatMapDataset(currentHabits),
+          );
+        } else {
+          // Handle the case where no data is returned
+          return Container();
+        }
+      },
+    );
+  }
+
+  // Build habit list
 
   Widget _buildHabitList() {
     // Hadit database
@@ -187,6 +221,8 @@ class _HomePageState extends State<HomePage> {
 
     // Return list of habits UI
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: currentHabits.length,
       itemBuilder: (context, index) {
         // Get each habit
