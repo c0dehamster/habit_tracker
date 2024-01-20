@@ -88,6 +88,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ListView(
         children: [
+          _buildHeatMap(),
           _buildHabitList(),
         ],
       ),
